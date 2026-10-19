@@ -79,13 +79,49 @@ export function actualizarContador(total, elementoContador) {
 
 //renderizar destinos
 export function renderPaises(paises, contenedor) {
+  if (paises.length === 0) {
+    contenedor.innerHTML = /*html*/ `
+    <div
+        class="
+        col-span-full
+        bg-white
+        border
+        border-dashed
+        border-slate-300
+        rounded-xl
+        p-12
+        text-center
+        "
+        >
+        <div class="text-5xl mb-4">
+        🔎
+        </div>
+        <h3
+        class="
+        text-xl
+        font-semibold
+        text-slate-800
+        mb-2
+        "
+        >
+        No encontramos destinos
+        </h3>
+        <p class="text-slate-500">
+        Intenta cambiar los criterios
+        de búsqueda.
+        </p>
+        </div>
+        `;
+    return;
+  }
   const tarjetas = paises
     .map((pais) => {
-      const nombre = pais.names?.common ?? "Nombre no disponible";
+      const nombre =
+        pais.name?.common ?? pais.names?.common ?? "Nombre no disponible";
       const region = pais.region ?? "Región no disponible";
       const población = pais.population ?? 0;
-      const bandera = pais.flag?.url_png ?? "";
-      const codigo = pais.codes?.alpha_3 ?? "";
+      const bandera = pais.flags?.png ?? pais.flag?.url_png ?? "";
+      const codigo = pais.cca3 ?? pais.codes?.alpha_3 ?? "";
       const poblacionFormateada = población.toLocaleString("es-MX");
 
       return /*html*/ `
@@ -212,5 +248,3 @@ export function renderPaises(paises, contenedor) {
     .join("");
   contenedor.innerHTML = tarjetas;
 }
-
-//me quede en página 200
