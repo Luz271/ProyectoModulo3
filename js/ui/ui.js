@@ -72,13 +72,49 @@ export function mostrarError(error) {
     `;
 }
 
+//mostrar favoritos vacios
+export function mostrarFavoritosVacios(contenedor) {
+  contenedor.innerHTML = /*html*/ `
+<div class="
+    col-span-full
+    bg-white
+    border
+    border-dashed
+    border-slate-300
+    rounded-xl
+    p-12
+    text-center
+    "
+    >
+<div class="text-5xl mb-4">
+    ♡
+</div>
+    <h3
+    class="
+    text-xl
+    font-semibold
+    text-slate-800
+
+    mb-2
+    "
+ >
+    No tienes destinos favoritos
+    </h3>
+    <p class="text-slate-500">
+    Explora los destinos y guarda
+    los que más te interesen.
+    </p>
+ </div>
+    `;
+}
+
 //actualizar contador
 export function actualizarContador(total, elementoContador) {
   elementoContador.textContent = `${total} destinos`;
 }
 
 //renderizar destinos
-export function renderPaises(paises, contenedor) {
+export function renderPaises(paises, contenedor, modo = "explorar") {
   if (paises.length === 0) {
     contenedor.innerHTML = /*html*/ `
     <div
@@ -123,6 +159,50 @@ export function renderPaises(paises, contenedor) {
       const bandera = pais.flag?.url_png ?? pais.flags?.png ?? "";
       const codigo = pais.codes?.alpha_3 ?? "";
       const poblacionFormateada = población.toLocaleString("es-MX");
+
+      const botonFavorito =
+        modo === "favoritos"
+          ? /*html*/ `
+        <button
+        type="button"
+        data-action="remove-favorite"
+        data-country-code="${codigo}"
+        class="
+        px-4
+        py-2
+        border
+        border-red-300
+        text-red-600
+        rounded-lg
+        cursor-pointer
+        hover:bg-red-50
+        transition
+        "
+        >
+        ♥ Eliminar
+        </button>
+        `
+          : /*html*/ `
+        <button
+        type="button"
+        data-action="favorite"
+        data-country-code="${codigo}"
+        aria-label="Agregar ${nombre} a favoritos"
+        class="
+        px-4
+        py-2
+        border
+        border-slate-300
+        text-slate-600
+        rounded-lg
+        cursor-pointer
+        hover:bg-slate-100
+        transition
+        "
+        >
+        ♡
+        </button>
+        `;
 
       return /*html*/ `
             <article 
@@ -221,25 +301,7 @@ export function renderPaises(paises, contenedor) {
                 Ver más
              </button>
 
-             <button 
-                type= "button"
-                data-action= "favorite"
-                data-country-code= "${codigo}"
-                arial-label= "Agregar ${nombre} a favoritos"
-                class= "
-                    px-4
-                    py-2
-                    border
-                    border-slate-300
-                    text-slate-600
-                    rounder-lg
-                    cursor-pointer
-                    hover:bg-slate-100
-                    transition
-                    "
-                >
-                ♡
-              </button>
+             ${botonFavorito}
        </div>
            </div>
              </article>

@@ -7,9 +7,16 @@ import {
   actualizarContador,
   mostrarDetalle,
   cerrarDetalle,
+  mostrarFavoritosVacios,
 } from "./ui/ui.js";
 import { procesarPaises } from "./utils/filters.js";
 import { crearMapa, destruirMapa } from "./ui/mapUI.js";
+import {
+  obtenerFavoritos,
+  agregarFavorito,
+  eliminarFavorito,
+  esFavorito,
+} from "./Services/favoritesService.js";
 
 //console.log('conexion exitosa')
 //referencias del DOM
@@ -20,11 +27,78 @@ const continenteFilter = document.querySelector("#continent-filter");
 const sortFilter = document.querySelector("#sort-filter");
 const detailModal = document.querySelector("#detail-modal");
 const detailModalContent = document.querySelector("#detail-modal-content");
+const btnExplorar = document.querySelector("#btn-explorar");
+const btnFavoritos = document.querySelector("#btn-favoritos");
+const sectionTitle = document.querySelector("#section-title");
+const searchForm = document.querySelector("#search-form");
 
-//busacr paises por codigo
+//buscar paises por codigo
 function obtenerPaisesPorCodigo(codigo) {
   return paises.find((pais) => (pais.codes?.alpha_3 ?? pais.cca3) === codigo);
 }
+
+//actualizar navegación
+function actualizarNavegacion() {
+  const clasesActivas = ["bg-blue-600", "text-white"];
+  const clasesInactivas = [
+    "bg-white",
+    "text-slate-700",
+    "border",
+    "border-slate-300",
+  ];
+  if (vistaActual === "explorar") {
+    btnExplorar.className = `
+      px-4
+      py-2
+      bg-blue-600
+      text-white
+      rounded-lg
+      font-medium
+      cursor-pointer
+      hover:bg-blue-700
+      transition
+      `;
+    btnFavoritos.className = `
+      px-4
+      py-2
+      bg-white
+      text-slate-700
+      border
+      border-slate-300
+      rounded-lg
+      font-medium
+      cursor-pointer
+      hover:bg-slate-100
+      transition
+      `;
+  } else {
+    btnExplorar.className = `
+      px-4
+      py-2
+      bg-white
+      text-slate-700
+      border
+      border-slate-300
+       rounded-lg
+       font-medium
+        cursor-pointer
+        hover:bg-slate-100
+        transition
+        `;
+    btnFavoritos.className = `
+        px-4
+        py-2
+        bg-blue-600
+        text-white
+        rounded-lg
+        font-medium
+        cursor-pointer
+        hover:bg-blue-700
+        transition
+        `;
+  }
+}
+
 //creamos la función de abrir detalle
 function abrirDetalle(codigo) {
   const pais = obtenerPaisesPorCodigo(codigo);
@@ -41,6 +115,9 @@ function abrirDetalle(codigo) {
 }
 //aplicamos filtros
 function aplicarFiltros() {
+  if (vistaActual !== "explorar") {
+    return;
+  }
   //obtenemos valores seleccionados
   const texto = searchInput.value;
   const continente = continenteFilter.value;
@@ -49,11 +126,105 @@ function aplicarFiltros() {
   renderPaises(resultados, destinationsContainer);
   actualizarContador(resultados.length, resultsCount);
 }
+
+//mostrar vista explorar
+function mostrarExplorar() {
+  vistaActual = "explorar";
+  sectionTitle.textContent = "Destinos";
+  searchForm.classList.remove("hidden");
+  actualizarNavegacion();
+  aplicarFiltros();
+}
+//mostrar favoritos
+function mostrarFavoritos() {
+  vistaActual = "favoritos";
+  sectionTitle.textContent = "Mis favoritos";
+  searchForm.classList.add("hidden");
+  actualizarNavegacion();
+  const favoritos = obtenerFavoritos();
+  if (favoritos.length === 0) {
+    mostrarFavoritosVacios(destinationsContainer);
+    actualizarContador(0, resultsCount);
+    return;
+  }
+  renderPaises(favoritos, destinationsContainer, "favoritos");
+  actualizarContador(favoritos.length, resultsCount);
+}
+//agregar destino a favoritos
+function manejarAgregarFavorito(codigo) {
+  //busacmos el pais
+  const pais = obtenerPaisesPorCodigo(codigo);
+  //validamos
+  if (!pais) {
+    return;
+  }
+  //comprobamos si ya estaba guardado
+  if (esFavorito(codigo)) {
+    Swal.fire({
+      icon: "info",
+      title: "Ya está en favoritos",
+      text: "Este destino ya había sido guardado.",
+    });
+    return;
+  }
+  //guardar favorito y mostrar confirmación
+  const agregado = agregarFavorito(pais);
+  if (agregado) {
+    Swal.fire({
+      icon: "success",
+      title: "Destino guardado",
+      text: `${pais.names?.common ?? "El destino"} fue agregado a favoritos.`,
+      timer: 1800,
+      showConfirmButton: false,
+    });
+  }
+}
+//Eliminar destino de favoritos
+async function manejarEliminarFavorito(codigo) {
+  const pais = obtenerPaisesPorCodigo(codigo);
+
+  if (!pais) {
+    return;
+  }
+  //agragmos confirmación con SeetAlert2
+  const resultado = await Swal.fire({
+    icon: "warning",
+    title: "Eliminar favorito",
+    text: `¿Deseas eliminar ${pais.names?.common ?? "este destino"} de tus
+favoritos?`,
+    showCancelButton: true,
+    confirmButtonText: "Eliminar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#dc2626",
+  });
+  if (!resultado.isConfirmed) {
+    return;
+  }
+  eliminarFavorito(codigo);
+  //actualizamos vista
+  mostrarFavoritos();
+
+  Swal.fire({
+    icon: "success",
+    title: "Favorito eliminado",
+    timer: 1500,
+    showConfirmButton: false,
+  });
+}
+
 //registrar eventos
 function registrarEventos() {
+  searchForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+  });
   searchInput.addEventListener("input", aplicarFiltros);
   continenteFilter.addEventListener("change", aplicarFiltros);
   sortFilter.addEventListener("change", aplicarFiltros);
+
+  // Navegación principal
+  btnExplorar.addEventListener("click", mostrarExplorar);
+  btnFavoritos.addEventListener("click", mostrarFavoritos);
+
   //acciones de las tarjetas
   destinationsContainer.addEventListener("click", (event) => {
     const boton = event.target.closest("[data-action]");
@@ -65,6 +236,12 @@ function registrarEventos() {
 
     if (accion === "detail") {
       abrirDetalle(codigo);
+    }
+    if (accion === "favorite") {
+      manejarAgregarFavorito(codigo);
+    }
+    if (accion === "remove-favorite") {
+      manejarEliminarFavorito(codigo);
     }
   });
 
@@ -93,6 +270,9 @@ function registrarEventos() {
 //inicializamos la app
 let paises = [];
 
+//estado de la vista actual
+let vistaActual = "explorar";
+
 //convertimos init() en una función asincrona
 async function init() {
   console.log("Explorador de Viajes iniciado");
@@ -112,6 +292,8 @@ async function init() {
 
   //remplazamos el render y actualizarContador por la siguiente instrucción:
   aplicarFiltros();
+  //actualizar navegación
+  actualizarNavegacion();
   //registrar eventos
   registrarEventos();
 
