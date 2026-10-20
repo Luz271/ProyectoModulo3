@@ -18,7 +18,6 @@ import {
   esFavorito,
 } from "./Services/favoritesService.js";
 
-//console.log('conexion exitosa')
 //referencias del DOM
 const destinationsContainer = document.querySelector("#destinations-container");
 const resultsCount = document.querySelector("#results-count");
@@ -123,7 +122,9 @@ function aplicarFiltros() {
   const continente = continenteFilter.value;
   const criterioOrden = sortFilter.value;
   const resultados = procesarPaises(paises, texto, continente, criterioOrden);
-  renderPaises(resultados, destinationsContainer);
+  //obtener favoritos actuales
+  const favoritos = obtenerFavoritos();
+  renderPaises(resultados, destinationsContainer, "explorar", favoritos);
   actualizarContador(resultados.length, resultsCount);
 }
 
@@ -178,6 +179,8 @@ function manejarAgregarFavorito(codigo) {
       showConfirmButton: false,
     });
   }
+  //actualizar tarjetas
+  aplicarFiltros();
 }
 //Eliminar destino de favoritos
 async function manejarEliminarFavorito(codigo) {
@@ -275,8 +278,6 @@ let vistaActual = "explorar";
 
 //convertimos init() en una función asincrona
 async function init() {
-  console.log("Explorador de Viajes iniciado");
-
   //mostrar resultado de la carga
   mostrarCargando(destinationsContainer);
 
@@ -296,9 +297,6 @@ async function init() {
   actualizarNavegacion();
   //registrar eventos
   registrarEventos();
-
-  //COMPROBAMOS RESULTADOS
-  console.log("paises obtenidos", paises);
 
   //ACTUALIZAR CONTADOR
   resultsCount.textContent = `${paises.length} destinos`;

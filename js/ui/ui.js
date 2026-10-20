@@ -110,11 +110,17 @@ export function mostrarFavoritosVacios(contenedor) {
 
 //actualizar contador
 export function actualizarContador(total, elementoContador) {
-  elementoContador.textContent = `${total} destinos`;
+  const texto = total === 1 ? "destino" : "destinos";
+  elementoContador.textContent = `${total} ${texto}`;
 }
 
 //renderizar destinos
-export function renderPaises(paises, contenedor, modo = "explorar") {
+export function renderPaises(
+  paises,
+  contenedor,
+  modo = "explorar",
+  favoritos = [],
+) {
   if (paises.length === 0) {
     contenedor.innerHTML = /*html*/ `
     <div
@@ -158,6 +164,10 @@ export function renderPaises(paises, contenedor, modo = "explorar") {
       const población = pais.population ?? 0;
       const bandera = pais.flag?.url_png ?? pais.flags?.png ?? "";
       const codigo = pais.codes?.alpha_3 ?? "";
+      //verificar si es favorito
+      const favoritoActivo = favoritos.some(
+        (favorito) => favorito.codes?.alpha_3 === codigo,
+      );
       const poblacionFormateada = población.toLocaleString("es-MX");
 
       const botonFavorito =
@@ -179,7 +189,7 @@ export function renderPaises(paises, contenedor, modo = "explorar") {
         transition
         "
         >
-        ♥ Eliminar
+            ♥ Eliminar
         </button>
         `
           : /*html*/ `
@@ -192,16 +202,18 @@ export function renderPaises(paises, contenedor, modo = "explorar") {
         px-4
         py-2
         border
-        border-slate-300
-        text-slate-600
+        ${
+          favoritoActivo
+            ? "border-red-300 text-red-600 bg-red-50"
+            : "border-slate-300 text-slate-600"
+        }
         rounded-lg
         cursor-pointer
         hover:bg-slate-100
-        transition
-        "
-        >
-        ♡
+        transition">
+        ${favoritoActivo ? "♥" : "♡"}
         </button>
+
         `;
 
       return /*html*/ `
