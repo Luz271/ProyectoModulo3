@@ -164,6 +164,8 @@ export function renderPaises(
       const población = pais.population ?? 0;
       const bandera = pais.flag?.url_png ?? pais.flags?.png ?? "";
       const codigo = pais.codes?.alpha_3 ?? "";
+      //recuperamos comentario almacenado en el favorito
+      const comentario = pais.comentario ?? "";
       //verificar si es favorito
       const favoritoActivo = favoritos.some(
         (favorito) => favorito.codes?.alpha_3 === codigo,
@@ -215,109 +217,87 @@ export function renderPaises(
         </button>
 
         `;
+      //sección comentario
+      const seccionComentario =
+        modo === "favoritos"
+          ? /*html*/ `
+        <div class="mt-4 border-t border-slate-200 pt-4">
+          <label class="mb-2 block text-sm font-semibold text-slate-700">
+            Mi comentario
+          </label>
+          <textarea
+            data-comment-country="${codigo}"
+            class="w-full rounded-lg border border-slate-300 p-3 text-sm outline-none focus:border-blue-500"
+            rows="3"
+            placeholder="Escribe una nota sobre este destino..."
+          >${comentario}</textarea>
+          <button
+            type="button"
+            data-action="save-comment"
+            data-country-code="${codigo}"
+            class="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
+          >
+            Guardar comentario
+          </button>
+        </div>
+        `
+          : "";
 
       return /*html*/ `
-            <article 
-                class = "
-                    bg-white
-
-                rounded-xl
-                border
-                border-slate-200
-                overflow-hidden
-                shadow-sm
-                hover:shadow-md
-                transition
-                "
-                >
-        <!--BANDERA-->
-        <div
-            class= "
-                h-48
-                bg-slate-100
-                overflow-hidden
-            "
-            >
+        <article class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition">
+          <!--BANDERA-->
+          <div class="h-48 bg-slate-100 overflow-hidden">
             <img
-                src="${bandera}"
-                alt="Bandera de ${nombre}"
-                class= "
-                    w-full
-                    h-full
-                    object-cover
-                "
+              src="${bandera}"
+              alt="Bandera de ${nombre}"
+              class="w-full h-full object-cover"
             >
-         </div>
-        <!--Información del destino-->
-        <div class= "p-5">
-            <div
-                class= "
-                    flex
-                    items-star
-                    justify-between
-            gap-4
-            mb-4
-            "
-            >
-            <div>
-                <h3
-                    class= "
-                        text-xl
-                        font-bold
-                        text-slate-900
-                    "
-                >
+          </div>
+          <!--Información del destino-->
+          <div class="p-5">
+            <div class="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 class="text-xl font-bold text-slate-900">
                   ${nombre}
                 </h3>
-
-                <p class= "text-sm text-slate-500">
-                    ${region}
+                <p class="text-sm text-slate-500">
+                  ${region}
                 </p>
+              </div>
+              <span class="px-3 py-1 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">
+                ${codigo}
+              </span>
             </div>
 
-        <!--Población-->
-        <div class ="mb-5">
-            <p class = "text-xs text-slate-500">
+            <!--Población-->
+            <div class="mb-5">
+              <p class="text-xs text-slate-500">
                 Población
-            </p>
-            <p class= "
-                text-lg
-                font-semibold
-                text-slate-800
-                "
-            >
-             ${poblacionFormateada}
-            </p>
-         </div>
+              </p>
+              <p class="text-lg font-semibold text-slate-800">
+                ${poblacionFormateada}
+              </p>
+            </div>
 
-        <!--Acciones-->
-        <div class= "flex gap-3">
-
-            <button
-                type = "button"
-                data-action = "detail"
-                data-country-code = "${codigo}"
-                class = "
-                    flex-1
-                    px-4
-                    py-2
-                    bg-blue-600
-                    text-white
-                    rounded-lg
-                    font-medium
-                    cursor-pointer
-                    hover:bg-blue-700
-                    transition
-                    "
-                >
+            <!--Acciones-->
+            <div class="flex gap-3">
+              <button
+                type="button"
+                data-action="detail"
+                data-country-code="${codigo}"
+                class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-medium cursor-pointer hover:bg-blue-700 transition"
+              >
                 Ver más
-             </button>
+              </button>
 
-             ${botonFavorito}
-       </div>
-           </div>
-             </article>
-            `;
+              ${botonFavorito}
+            </div>
+
+            <!--COMENTARIO-->
+            ${seccionComentario}
+          </div>
+        </article>
+      `;
     })
     .join("");
   contenedor.innerHTML = tarjetas;

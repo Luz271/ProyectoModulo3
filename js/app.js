@@ -16,6 +16,7 @@ import {
   agregarFavorito,
   eliminarFavorito,
   esFavorito,
+  actualizarComentario,
 } from "./Services/favoritesService.js";
 
 //referencias del DOM
@@ -112,6 +113,7 @@ function abrirDetalle(codigo) {
     crearMapa(datosMapa.latitud, datosMapa.longitud, datosMapa.nombre);
   }, 0);
 }
+
 //aplicamos filtros
 function aplicarFiltros() {
   if (vistaActual !== "explorar") {
@@ -136,6 +138,7 @@ function mostrarExplorar() {
   actualizarNavegacion();
   aplicarFiltros();
 }
+
 //mostrar favoritos
 function mostrarFavoritos() {
   vistaActual = "favoritos";
@@ -151,6 +154,32 @@ function mostrarFavoritos() {
   renderPaises(favoritos, destinationsContainer, "favoritos");
   actualizarContador(favoritos.length, resultsCount);
 }
+
+//Guardar Comentario
+function manejarGuardarComentario(codigo) {
+  const textarea = document.querySelector(`[data-comment-country="${codigo}"]`);
+  //validacion
+  if (!textarea) {
+    return;
+  }
+  //actualizar favoritos
+  const comentario = textarea.value.trim();
+  //actualizar favorito
+  const actualizado = actualizarComentario(codigo, comentario);
+  //validacion
+  if (!actualizado) {
+    return;
+  }
+  //mostrar confirmación
+  Swal.fire({
+    icon: "success",
+    title: "Comentario guardado",
+    text: "Tu comentario se guardó correctamente.",
+    timer: 1800,
+    showConfirmButton: false,
+  });
+}
+
 //agregar destino a favoritos
 function manejarAgregarFavorito(codigo) {
   //busacmos el pais
@@ -182,6 +211,7 @@ function manejarAgregarFavorito(codigo) {
   //actualizar tarjetas
   aplicarFiltros();
 }
+
 //Eliminar destino de favoritos
 async function manejarEliminarFavorito(codigo) {
   const pais = obtenerPaisesPorCodigo(codigo);
@@ -245,6 +275,10 @@ function registrarEventos() {
     }
     if (accion === "remove-favorite") {
       manejarEliminarFavorito(codigo);
+    }
+    //guardar comenatario
+    if (accion === "save-comment") {
+      manejarGuardarComentario(codigo);
     }
   });
 
